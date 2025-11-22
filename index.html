@@ -135,7 +135,7 @@
         <h2>Управление</h2>
         
         <div class="control-group">
-            <label>День года: <span id="day-value">326</span></label>
+            <label>Дата года: <span id="day-value">326</span></label>
             <input type="range" id="day-slider" min="1" max="365" value="326" step="0.1">
         </div>
         
@@ -190,6 +190,15 @@
         const TROPIC_CAPRICORN = -23.5;  // Тропик Козерога (градусы)
         
         // Расчет солнечной деклинации (угла отклонения от экватора)
+
+                // Преобразование дня года в календарную дату
+        function dayOfYearToDate(dayOfYear, year = 2025) {
+            const date = new Date(year, 0);
+            date.setDate(dayOfYear);
+            const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 
+                           'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+        }
         function calculateSolarDeclination(dayOfYear) {
             // Формула для расчета деклинации
             const angle = (2 * Math.PI / 365) * (dayOfYear - 81);
@@ -424,8 +433,7 @@
             
             const infoContent = document.getElementById('info-content');
             infoContent.innerHTML = `
-                <strong>Дата:</strong> День ${Math.floor(currentDay)} года<br>
-                <strong>Время:</strong> ${Math.floor(currentHour)}:${Math.floor((currentHour % 1) * 60).toString().padStart(2, '0')} MSK<br>
+                <strong>Дата:</strong> ${dayOfYearToDate(Math.floor(currentDay))} (день ${Math.floor(currentDay)})<br>                <strong>Время:</strong> ${Math.floor(currentHour)}:${Math.floor((currentHour % 1) * 60).toString().padStart(2, '0')} MSK<br>
                 <strong>Деклинация Солнца:</strong> ${sunPos.declination.toFixed(2)}°<br>
                 <strong>Радиус Солнца:</strong> ${(sunPos.radius/1000).toFixed(1)} км<br>
                 <strong>Деклинация Луны:</strong> ${moonPos.declination.toFixed(2)}°<br>
@@ -442,8 +450,7 @@
             
             daySlider.addEventListener('input', (e) => {
                 currentDay = parseFloat(e.target.value);
-                document.getElementById('day-value').textContent = Math.floor(currentDay);
-                updateCelestialBodies();
+                document.getElementById('day-value').textContent = `${dayOfYearToDate(Math.floor(currentDay))} (день ${Math.floor(currentDay)})`;                updateCelestialBodies();
                 updateInfoPanel();
             });
             
@@ -518,8 +525,7 @@
                 
                 // Обновление слайдеров
                 document.getElementById('day-slider').value = currentDay;
-                document.getElementById('day-value').textContent = Math.floor(currentDay);
-                document.getElementById('hour-slider').value = currentHour;
+                document.getElementById('day-value').textContent = `${dayOfYearToDate(Math.floor(currentDay))} (день ${Math.floor(currentDay)})`;                document.getElementById('hour-slider').value = currentHour;
                 document.getElementById('hour-value').textContent = currentHour.toFixed(1);
                 document.getElementById('moon-slider').value = currentMoonDay;
                 document.getElementById('moon-value').textContent = currentMoonDay.toFixed(1);
