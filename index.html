@@ -243,9 +243,7 @@
             const radius = latitudeToRadius(moonDeclination);
             
             // Смещение по фазе + суточное вращение
-            const angle = ((moonDay / 29.5) + (hourOfDay / 24)) * Math.PI * 2 + Math.PI; // +π для обратной стороны
-            
-            const x = radius * Math.cos(angle);
+        // Сидерический период Луны - полный оборот за 27.3 дня (независимо от Солнца)        const angle = (moonDay / 27.3) * Math.PI * 2; // Луна движется по сидерическому периоду (27.3 дня)            const x = radius * Math.cos(angle);
             const z = radius * Math.sin(angle);
             
         
