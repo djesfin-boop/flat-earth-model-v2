@@ -336,7 +336,7 @@
         
         // Создание плоской Земли
         function createEarth() {
-            const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 128);
+            const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 256);
             const material = new THREE.MeshStandardMaterial({
                 color: 0x2d5a3a,
                 roughness: 0.8,
@@ -347,6 +347,35 @@
             earth.rotation.x = -Math.PI / 2;
             earth.receiveShadow = true;
             scene.add(earth);
+
+                    // Добавление тропиков Рака и Козерога
+                    // Тропик Рака (23.5° с.ш.)
+                    const tropicCancerRadius = latitudeToRadius(TROPIC_CANCER);
+                    const tropicCancerGeometry = new THREE.RingGeometry(tropicCancerRadius - 50, tropicCancerRadius + 50, 128);
+                    const tropicCancerMaterial = new THREE.MeshBasicMaterial({ 
+                                    color: 0xff6b6b,
+                                    side: THREE.DoubleSide,
+                                    transparent: true,
+                                    opacity: 0.5
+                                });
+                    const tropicCancer = new THREE.Mesh(tropicCancerGeometry, tropicCancerMaterial);
+                    tropicCancer.rotation.x = -Math.PI / 2;
+                    tropicCancer.position.y = 10; // Немного выше плоскости
+                    scene.add(tropicCancer);
+
+                    // Тропик Козерога (23.5° ю.ш.)
+                    const tropicCapricornRadius = latitudeToRadius(TROPIC_CAPRICORN);
+                    const tropicCapricornGeometry = new THREE.RingGeometry(tropicCapricornRadius - 50, tropicCapricornRadius + 50, 128);
+                    const tropicCapricornMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x6bb6ff,
+                                    side: THREE.DoubleSide,
+                                    transparent: true,
+                                    opacity: 0.5
+                                });
+                const tropicCapricorn = new THREE.Mesh(tropicCapricornGeometry, tropicCapricornMaterial);
+                    tropicCapricorn.rotation.x = -Math.PI / 2;
+                    tropicCapricorn.position.y = 10; // Немного выше плоскости
+                    scene.add(tropicCapricorn);
         }
         
         // Создание купола
