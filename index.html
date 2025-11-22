@@ -174,21 +174,6 @@
         let earth, atmosphere, dome, sun, moon, shadowPlane, gridHelper;
         let animationId;
         let isAnimating = false;
-                /*
-                         * КОНЦЕПЦИЯ МОДЕЛИ: Отражения от купола и триангуляция по теням
-                                  * 
-                                           * 1. ВИДИМОЕ ДВИЖЕНИЕ: То, что мы наблюдаем на небе - это отражения/проекции от купола
-                                                    *    Реальные Солнце и Луна находятся гораздо ближе к Земле, чем их видимые отражения
-                 * 
-                          * 2. РЕАЛЬНОЕ ПОЛОЖЕНИЕ: Определяется через триангуляцию по теням во время затмений
-                                   *    - Солнечные затмения: тень Луны на плоскости Земли
-                                            *    - Лунные затмения: тень Земли на Луне
-                                                     *    Анализ теней с разных точек позволяет вычислить истинную высоту и положение
-                                                              * 
-                                                                       * 3. ЗАТМЕНИЯ - КЛЮЧЕВОЙ ДОКАЗАТЕЛЬСТВО:
-                                                                                *    Физическое движение светил опровергается фактом триангуляции теней
-                                                                                         *    Реальные даты затмений и видимые тени позволяют точно рассчитать положение
-                                                                                                  */
         let animationSpeed = 1;
         
         // Текущие значения (с дробной частью)
@@ -228,8 +213,6 @@
         }
         
         // Расчет позиции солнца на куполе
-                // ВИДИМАЯ ПРОЕКЦИЯ: Рассчитываем видимое положение Солнца на небе (отражение от купола)
-                // Реальное положение светила определяется триангуляцией по теням во время затмений
         function calculateSunPosition(dayOfYear, hourOfDay) {
             // Расчет деклинации (широты) солнца
             const declination = calculateSolarDeclination(dayOfYear);
@@ -254,7 +237,6 @@
         }
         
         // Расчет позиции луны на куполе
-                // ВИДИМАЯ ПРОЕКЦИЯ: Рассчитываем видимое положение Луны на небе (отражение от купола)
         function calculateMoonPosition(moonDay, hourOfDay) {
             // Луна имеет свою собственную орбиту, но также по куполу
             const moonDeclination = Math.sin((moonDay / 29.5) * Math.PI * 2) * 28.5;
@@ -336,47 +318,17 @@
         
         // Создание плоской Земли
         function createEarth() {
-            const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 256);
-
-                                 THREE.MeshStandardMaterial({
-            color: 0x2d5a3a,
+            const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 128);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x2d5a3a,
                 roughness: 0.8,
-                            metalness: 0, // Убираем металлический эффект
+                metalness: 0.2,
                 side: THREE.DoubleSide
             });
             earth = new THREE.Mesh(geometry, material);
             earth.rotation.x = -Math.PI / 2;
             earth.receiveShadow = true;
             scene.add(earth);
-
-                    // Добавление тропиков Рака и Козерога
-                    // Тропик Рака (23.5° с.ш.)
-                    const tropicCancerRadius = latitudeToRadius(TROPIC_CANCER);
-                    const tropicCancerGeometry = new THREE.RingGeometry(tropicCancerRadius - 50, tropicCancerRadius + 50, 128);
-                    const tropicCancerMaterial = new THREE.MeshBasicMaterial({ 
-                                    color: 0xff6b6b,
-                                    side: THREE.DoubleSide,
-                                    transparent: true,
-                                    opacity: 0.5
-                                });
-                    const tropicCancer = new THREE.Mesh(tropicCancerGeometry, tropicCancerMaterial);
-                    tropicCancer.rotation.x = -Math.PI / 2;
-                    tropicCancer.position.y = 10; // Немного выше плоскости
-                    scene.add(tropicCancer);
-
-                    // Тропик Козерога (23.5° ю.ш.)
-                    const tropicCapricornRadius = latitudeToRadius(TROPIC_CAPRICORN);
-                    const tropicCapricornGeometry = new THREE.RingGeometry(tropicCapricornRadius - 50, tropicCapricornRadius + 50, 128);
-                    const tropicCapricornMaterial = new THREE.MeshBasicMaterial({ 
-                    color: 0x6bb6ff,
-                                    side: THREE.DoubleSide,
-                                    transparent: true,
-                                    opacity: 0.5
-                                });
-                const tropicCapricorn = new THREE.Mesh(tropicCapricornGeometry, tropicCapricornMaterial);
-                    tropicCapricorn.rotation.x = -Math.PI / 2;
-                    tropicCapricorn.position.y = 10; // Немного выше плоскости
-                    scene.add(tropicCapricorn);
         }
         
         // Создание купола
@@ -462,9 +414,6 @@
         }
         
         // Обновление позиций небесных тел
-                // ВАЖНО: То, что мы видим на небе - это ОТРАЖЕНИЯ/ПРОЕКЦИИ от купола
-                // Реальные светила находятся гораздо ближе к Земле
-                // Триангуляция по теням во время затмений позволяет вычислить их истинное положение
         function updateCelestialBodies() {
             // Обновление позиции солнца
             const sunPos = calculateSunPosition(currentDay, currentHour);
