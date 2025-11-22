@@ -233,6 +233,13 @@
             <input type="range" id="moon-day-slider" min="0" max="29" value="15" step="1">
         </div>
 
+                    <div class="control-group">
+                <label>
+                    Скорость: <span class="value-display" id="speed-value">1x</span>
+                </label>
+                <input type="range" id="speed-slider" min="0.1" max="5" value="1" step="0.1">
+            </div>
+
         <div class="control-group">
             <label style="margin-bottom: 10px;">Видимость объектов:</label>
 
@@ -483,6 +490,13 @@ function setupControls() {
         document.getElementById('moon-day-value').textContent = e.target.value;
         updateScene();
     });
+
+        // Обработчик ползунка скорости
+    let animationSpeed = 1;
+    document.getElementById('speed-slider').addEventListener('input', function(e) {
+        animationSpeed = parseFloat(e.target.value);
+        document.getElementById('speed-value').textContent = animationSpeed.toFixed(1) + 'x';
+    });
     
     document.getElementById('show-earth').addEventListener('change', function(e) {
         earth.visible = e.target.checked;
@@ -531,8 +545,7 @@ function animate() {
     
     if (isAnimating) {
         const daySlider = document.getElementById('day-slider');
-        let newDay = parseInt(daySlider.value) + 0.1;
-        if (newDay > 365) newDay = 1;
+        let newDay = parseInt(daySlider.value) + (0.1 * animationSpeed);        if (newDay > 365) newDay = 1;
         daySlider.value = newDay;
         document.getElementById('day-value').textContent = Math.round(newDay);
         updateScene();
