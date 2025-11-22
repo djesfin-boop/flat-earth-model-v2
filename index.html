@@ -338,12 +338,8 @@
         function createEarth() {
             const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 256);
 
-                                // Загрузка текстуры карты Глиссона (Gleason's Azimuthal Projection)
-                const textureLoader = new THREE.TextureLoader();
-        const gleasonTexture = textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Gleason%27s_New_Standard_Map_of_the_World.jpg/2560px-Gleason%27s_New_Standard_Map_of_the_World.jpg');                metalness: 0.2,
-
-            const material = new THREE.MeshStandardMaterial({
-            color: 0xffffff, // Белый цвет для точной передачи текстуры                            map: gleasonTexture, // Применяем текстуру карты Глиссона
+                                 THREE.MeshStandardMaterial({
+            color: 0x2d5a3a,
                 roughness: 0.8,
                             metalness: 0, // Убираем металлический эффект
                 side: THREE.DoubleSide
