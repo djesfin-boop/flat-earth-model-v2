@@ -243,9 +243,11 @@
             const radius = latitudeToRadius(moonDeclination);
             
             // Смещение по фазе + суточное вращение
-        // Сидерический период Луны - полный оборот за 27.3 дня (независимо от Солнца)        const angle = (moonDay / 27.3) * Math.PI * 2; // Луна движется по сидерическому периоду (27.3 дня)            const x = radius * Math.cos(angle);
-            const z = radius * Math.sin(angle);
-            
+        // Сидерический период Луны - полный оборот за 27.3 дня (независимо от Солнца)
+        const angle = (moonDay / 27.3) * Math.PI * 2;
+        
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);            
         
         // Высота луны - фиксированная высота над плоскостью (немного ниже солнца)
         const MOON_HEIGHT = 3800;  // Фиксированная высота луны над плоскостью
