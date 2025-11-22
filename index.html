@@ -323,6 +323,8 @@ let isAnimating = false;
 // Константы
 const EARTH_RADIUS = 20000;
 const DOME_RADIUS = 30000;
+    let currentDay = 172;  // Текущий день года с дробной частью
+let currentMoonDay = 15;  // Текущий день луны с дробной частью
 const SUN_ORBIT_RADIUS = 14000;
 const MOON_ORBIT_RADIUS = 10000;
 const SUN_HEIGHT = 4000;
@@ -544,19 +546,19 @@ function animate() {
     controls.update();
     
     if (isAnimating) {
+        // Движение солнца
+        currentDay += (0.1 * animationSpeed);
+        if (currentDay > 365) currentDay = 1;
         const daySlider = document.getElementById('day-slider');
-        let newDay = parseInt(daySlider.value) + (0.1 * animationSpeed);        if (newDay > 365) newDay = 1;
-        daySlider.value = newDay;
-        document.getElementById('day-value').textContent = Math.round(newDay);
-        updateScene();
+        daySlider.value = currentDay;
+        document.getElementById('day-value').textContent = Math.round(currentDay);        updateScene();
                 
         // Движение луны
+        currentMoonDay += (0.4 * animationSpeed);
+        if (currentMoonDay > 29) currentMoonDay = 0;
         const moonSlider = document.getElementById('moon-day-slider');
-        let newMoonDay = parseInt(moonSlider.value) + (0.4 * animationSpeed); // Луна движется в 4 раза быстрее
-        if (newMoonDay > 29) newMoonDay = 0;
-        moonSlider.value = newMoonDay;
-        document.getElementById('moon-day-value').textContent = Math.round(newMoonDay);
-    }
+        moonSlider.value = currentMoonDay;
+        document.getElementById('moon-day-value').textContent = Math.round(currentMoonDay);    }
     
     renderer.render(scene, camera);
 }
