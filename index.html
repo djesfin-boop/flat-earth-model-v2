@@ -220,19 +220,20 @@
             // Радиус от центра (Северного полюса)
             const radius = latitudeToRadius(declination);
             
-            // Угол вращения в течение суток (0-24 часа -> 0-360 градусов)
-            const angle = (hourOfDay / 24) * Math.PI * 2;
+        // Угол вращения в течение суток (0-24 часа -> 0-360 градусов)
+        const angle = (hourOfDay / 24) * Math.PI * 2;
+        
+        // Позиция на плоскости Земли
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        
+        // Высота солнца - фиксированная высота над плоскостью (3000-5000 единиц)
+        // Солнце движется по кругу на постоянной высоте, меняется только радиус круга
+        const SUN_HEIGHT = 4000;  // Фиксированная высота солнца над плоскостью
+        const y = SUN_HEIGHT;
+        
+                return { x, y, z, declination, radius };
             
-            // Позиция на плоскости Земли
-            const x = radius * Math.cos(angle);
-            const z = radius * Math.sin(angle);
-            
-            // Высота - проекция на купол (солнце движется по куполу)
-            const distanceFromCenter = Math.sqrt(x*x + z*z);
-            const domeAngle = Math.asin(Math.min(1, distanceFromCenter / DOME_RADIUS));
-            const y = DOME_RADIUS * Math.cos(domeAngle);
-            
-            return { x, y: Math.max(1500, y), z, declination, radius };
         }
         
         // Расчет позиции луны на куполе
@@ -247,11 +248,13 @@
             const x = radius * Math.cos(angle);
             const z = radius * Math.sin(angle);
             
-            const distanceFromCenter = Math.sqrt(x*x + z*z);
-            const domeAngle = Math.asin(Math.min(1, distanceFromCenter / DOME_RADIUS));
-            const y = DOME_RADIUS * Math.cos(domeAngle);
+        
+        // Высота луны - фиксированная высота над плоскостью (немного ниже солнца)
+        const MOON_HEIGHT = 3800;  // Фиксированная высота луны над плоскостью
+        const y = MOON_HEIGHT;
+        
+                return { x, y, z, declination: moonDeclination, radius };
             
-            return { x, y: Math.max(1500, y), z, declination: moonDeclination, radius };
         }
         
         // Инициализация сцены
