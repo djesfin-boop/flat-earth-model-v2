@@ -318,6 +318,7 @@ let scene, camera, renderer, controls;
 let earth, atmosphere, dome, sun, moon, shadowPlane, gridHelper;
 let animationId;
 let isAnimating = false;
+    let animationSpeed = 1;
 
 // Константы
 const EARTH_RADIUS = 20000;
@@ -492,7 +493,6 @@ function setupControls() {
     });
 
         // Обработчик ползунка скорости
-    let animationSpeed = 1;
     document.getElementById('speed-slider').addEventListener('input', function(e) {
         animationSpeed = parseFloat(e.target.value);
         document.getElementById('speed-value').textContent = animationSpeed.toFixed(1) + 'x';
