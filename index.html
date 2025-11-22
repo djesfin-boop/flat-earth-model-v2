@@ -549,6 +549,13 @@ function animate() {
         daySlider.value = newDay;
         document.getElementById('day-value').textContent = Math.round(newDay);
         updateScene();
+                
+        // Движение луны
+        const moonSlider = document.getElementById('moon-day-slider');
+        let newMoonDay = parseInt(moonSlider.value) + (0.4 * animationSpeed); // Луна движется в 4 раза быстрее
+        if (newMoonDay > 29) newMoonDay = 0;
+        moonSlider.value = newMoonDay;
+        document.getElementById('moon-day-value').textContent = Math.round(newMoonDay);
     }
     
     renderer.render(scene, camera);
