@@ -30,5 +30,7 @@ const DomeGeometry = {
         this.dome = new THREE.Mesh(geometry, material);
         this.dome.position.y = 0;
         scene.add(this.dome);
+        
+        console.log('✓ Купол создан');
     }
 };

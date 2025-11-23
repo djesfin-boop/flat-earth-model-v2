@@ -5,7 +5,7 @@
 
 const InfoPanel = {
     init() {
-        // Инициализация панели
+        console.log('✓ Информационная панель инициализирована');
     },
     
     update(data) {
@@ -32,7 +32,7 @@ const InfoPanel = {
         }
         
         if (moonInfo && data.moonSource) {
-            sunInfo.innerHTML = `
+            moonInfo.innerHTML = `
                 <strong>Источник Луны:</strong><br>
                 Глубина: ${Math.abs(data.moonSource.y).toFixed(0)} км<br>
                 Орбита: ${data.moonSource.orbitRadius.toFixed(0)} км<br>
@@ -40,7 +40,7 @@ const InfoPanel = {
             `;
         }
         
-        if (projectionInfo && data.sunProjection) {
+        if (projectionInfo && data.sunProjection && data.moonProjection) {
             projectionInfo.innerHTML = `
                 <strong>Проекции на куполе:</strong><br>
                 Солнце: высота ${data.sunProjection.position.y.toFixed(0)} км<br>

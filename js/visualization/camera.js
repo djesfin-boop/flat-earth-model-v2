@@ -31,6 +31,8 @@ const CameraController = {
         this.controls.maxDistance = cam.MAX_DISTANCE;
         this.controls.minDistance = cam.MIN_DISTANCE;
         this.controls.maxPolarAngle = cam.MAX_POLAR_ANGLE;
+        
+        console.log('✓ Камера настроена');
     },
     
     update() {

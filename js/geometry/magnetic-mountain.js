@@ -24,5 +24,7 @@ const MagneticMountain = {
         this.mountain = new THREE.Mesh(geometry, material);
         this.mountain.position.y = GEOMETRY.MAGNETIC_MOUNTAIN_HEIGHT / 2;
         scene.add(this.mountain);
+        
+        console.log('✓ Магнитная гора создана');
     }
 };

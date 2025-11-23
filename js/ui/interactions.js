@@ -1,12 +1,12 @@
 /**
  * Пользовательские взаимодействия
- * Мышь, клавиатура, тачскрин
+ * Мышь, клавиатура
  */
 
 const UserInteractions = {
     init() {
         this.setupKeyboardControls();
-        this.setupMouseControls();
+        console.log('✓ Взаимодействия настроены');
     },
     
     setupKeyboardControls() {
@@ -22,9 +22,5 @@ const UserInteractions = {
                     break;
             }
         });
-    },
-    
-    setupMouseControls() {
-        // Дополнительные контролы мыши если нужны
     }
 };

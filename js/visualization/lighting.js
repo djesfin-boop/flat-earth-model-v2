@@ -1,6 +1,6 @@
 /**
  * Освещение сцены
- * Ambient, hemisphere, directional lights
+ * Ambient, hemisphere lights
  */
 
 const SceneLighting = {
@@ -19,5 +19,7 @@ const SceneLighting = {
             VISUAL.LIGHTING.HEMISPHERE_INTENSITY
         );
         scene.add(hemisphere);
+        
+        console.log('✓ Освещение настроено');
     }
 };

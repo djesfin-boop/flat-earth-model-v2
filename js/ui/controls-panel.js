@@ -15,6 +15,8 @@ const ControlsPanel = {
         this.setupButtons();
         this.setupDraggable();
         this.setupCollapsible();
+        
+        console.log('✓ Панель управления инициализирована');
     },
     
     setupDateTimeControls() {
@@ -42,7 +44,61 @@ const ControlsPanel = {
     },
     
     setupVisibilityControls() {
-        // Будет реализовано для каждого объекта
+        document.getElementById('show-earth')?.addEventListener('change', (e) => {
+            if (EarthPlane.earth) EarthPlane.earth.visible = e.target.checked;
+            if (EarthPlane.coordinateGrid) EarthPlane.coordinateGrid.visible = e.target.checked;
+        });
+        
+        document.getElementById('show-dome')?.addEventListener('change', (e) => {
+            if (DomeGeometry.dome) DomeGeometry.dome.visible = e.target.checked;
+        });
+        
+        document.getElementById('show-atmosphere')?.addEventListener('change', (e) => {
+            if (AtmospherePhysics.atmosphereLayers) {
+                AtmospherePhysics.atmosphereLayers.visible = e.target.checked;
+            }
+        });
+        
+        document.getElementById('show-grid')?.addEventListener('change', (e) => {
+            if (EarthPlane.coordinateGrid) {
+                EarthPlane.coordinateGrid.visible = e.target.checked;
+            }
+        });
+        
+        document.getElementById('show-mountain')?.addEventListener('change', (e) => {
+            if (MagneticMountain.mountain) {
+                MagneticMountain.mountain.visible = e.target.checked;
+            }
+        });
+        
+        document.getElementById('show-sun-source')?.addEventListener('change', (e) => {
+            if (SunSource.source) SunSource.source.visible = e.target.checked;
+        });
+        
+        document.getElementById('show-moon-source')?.addEventListener('change', (e) => {
+            if (MoonSource.source) MoonSource.source.visible = e.target.checked;
+        });
+        
+        document.getElementById('show-sun-projection')?.addEventListener('change', (e) => {
+            if (CelestialProjections.sunProjection) {
+                CelestialProjections.sunProjection.visible = e.target.checked;
+            }
+        });
+        
+        document.getElementById('show-moon-projection')?.addEventListener('change', (e) => {
+            if (CelestialProjections.moonProjection) {
+                CelestialProjections.moonProjection.visible = e.target.checked;
+            }
+        });
+        
+        document.getElementById('show-projection-rays')?.addEventListener('change', (e) => {
+            if (CelestialProjections.sunRays) {
+                CelestialProjections.sunRays.visible = e.target.checked;
+            }
+            if (CelestialProjections.moonRays) {
+                CelestialProjections.moonRays.visible = e.target.checked;
+            }
+        });
     },
     
     setupButtons() {
@@ -58,7 +114,6 @@ const ControlsPanel = {
     },
     
     setupDraggable() {
-        // Реализация перетаскивания панели
         const panel = document.getElementById('controls-panel');
         const handle = panel.querySelector('.drag-handle');
         let isDragging = false, currentX, currentY, initialX, initialY;

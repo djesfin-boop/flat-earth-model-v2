@@ -17,6 +17,16 @@ const SunSource = {
         this.source = new THREE.Mesh(geometry, material);
         this.source.position.y = GEOMETRY.SUN_SOURCE.DEPTH;
         
+        // Свечение
+        const glowGeometry = new THREE.SphereGeometry(GEOMETRY.SUN_SOURCE.SIZE * 1.5, 32, 32);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: VISUAL.SUN_SOURCE.GLOW_COLOR,
+            transparent: true,
+            opacity: VISUAL.SUN_SOURCE.GLOW_OPACITY
+        });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        this.source.add(glow);
+        
         // Свет от источника
         this.light = new THREE.PointLight(
             VISUAL.SUN_SOURCE.COLOR,
@@ -26,6 +36,7 @@ const SunSource = {
         this.source.add(this.light);
         
         scene.add(this.source);
+        console.log('✓ Источник Солнца создан');
     },
     
     updatePosition(pos) {
