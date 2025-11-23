@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модель проекции светил - Плоская Земля v3.0</title>
+    <link rel="stylesheet" href="css/projection-model.css">
+</head>
+<body>
+    <div id="loading-status">Загрузка модели проекции...</div>
+    <div id="canvas-container"></div>
+    
+    <!-- Информационная панель -->
+    <div id="info-panel" class="panel" style="display: none;">
+        <div class="panel-header">
+            <h3>Информация о модели</h3>
+            <button class="panel-toggle" data-panel="info">−</button>
+        </div>
+        <div id="info-content" class="panel-content">
+            <div id="model-type">Модель: Проекция из центра</div>
+            <div id="time-info"></div>
+            <div id="sun-info"></div>
+            <div id="moon-info"></div>
+            <div id="projection-info"></div>
+        </div>
+    </div>
+    
+    <!-- Панель управления -->
+    <div id="controls-panel" class="panel draggable" style="display: none;">
+        <div class="panel-header drag-handle">
+            <h2>Управление</h2>
+            <button class="panel-toggle" data-panel="controls">−</button>
+        </div>
+        <div id="controls-content" class="panel-content">
+            <div class="control-group">
+                <label>Дата:</label>
+                <input type="date" id="date-picker" value="2025-11-23">
+            </div>
+            
+            <div class="control-group">
+                <label>Время (MSK):</label>
+                <input type="time" id="time-picker" value="21:00">
+            </div>
+            
+            <div class="control-group">
+                <label>Скорость: <span id="speed-value">1.0x</span></label>
+                <input type="range" id="speed-slider" min="0.1" max="20" value="1" step="0.1">
+            </div>
+            
+            <div class="control-section">
+                <h4>Видимость объектов</h4>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="show-earth" checked> Земля</label>
+                    <label><input type="checkbox" id="show-dome" checked> Купол</label>
+                    <label><input type="checkbox" id="show-atmosphere" checked> Атмосфера</label>
+                    <label><input type="checkbox" id="show-grid" checked> Координатная сетка</label>
+                    <label><input type="checkbox" id="show-mountain" checked> Магнитная гора</label>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h4>Источники света</h4>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="show-sun-source" checked> Источник Солнца</label>
+                    <label><input type="checkbox" id="show-moon-source" checked> Источник Луны</label>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h4>Проекции</h4>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="show-sun-projection" checked> Проекция Солнца</label>
+                    <label><input type="checkbox" id="show-moon-projection" checked> Проекция Луны</label>
+                    <label><input type="checkbox" id="show-projection-rays" checked> Лучи проекции</label>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h4>Визуализация</h4>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="show-refraction"> Атмосферная рефракция</label>
+                    <label><input type="checkbox" id="show-eclipse-shadow"> Тени затмений</label>
+                </div>
+            </div>
+            
+            <button id="reset-camera" class="btn-primary">Сбросить камеру</button>
+            <button id="toggle-animation" class="btn-primary">Запустить анимацию</button>
+        </div>
+    </div>
+
+    <!-- Three.js библиотека -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Конфигурация -->
+    <script src="js/config/constants.js"></script>
+    <script src="js/config/geometry.js"></script>
+    <script src="js/config/visual.js"></script>
+    
+    <!-- Утилиты -->
+    <script src="js/utils/math.js"></script>
+    <script src="js/utils/converters.js"></script>
+    
+    <!-- Физика -->
+    <script src="js/physics/light-sources.js"></script>
+    <script src="js/physics/projection.js"></script>
+    <script src="js/physics/reflection.js"></script>
+    <script src="js/physics/atmosphere.js"></script>
+    
+    <!-- Геометрия -->
+    <script src="js/geometry/dome.js"></script>
+    <script src="js/geometry/earth-plane.js"></script>
+    <script src="js/geometry/magnetic-mountain.js"></script>
+    
+    <!-- Небесные объекты -->
+    <script src="js/celestial/sun-source.js"></script>
+    <script src="js/celestial/moon-source.js"></script>
+    <script src="js/celestial/projections.js"></script>
+    
+    <!-- Астрономия -->
+    <script src="js/astronomy/time.js"></script>
+    <script src="js/astronomy/positions.js"></script>
+    <script src="js/astronomy/eclipses.js"></script>
+    
+    <!-- Визуализация -->
+    <script src="js/visualization/scene-setup.js"></script>
+    <script src="js/visualization/camera.js"></script>
+    <script src="js/visualization/lighting.js"></script>
+    <script src="js/visualization/materials.js"></script>
+    
+    <!-- UI -->
+    <script src="js/ui/controls-panel.js"></script>
+    <script src="js/ui/info-panel.js"></script>
+    <script src="js/ui/interactions.js"></script>
+    
+    <!-- Главный файл -->
+    <script src="js/main-projection.js"></script>
+</body>
+</html>
