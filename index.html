@@ -53,8 +53,10 @@
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            max-width: 260px;
+            max-width: 280px;
             z-index: 100;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         #controls-panel h2 {
@@ -80,6 +82,15 @@
         .control-group input[type="range"] {
             width: 100%;
             margin-bottom: 5px;
+        }
+        
+        .control-group input[type="date"],
+        .control-group input[type="time"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #2a5298;
+            border-radius: 5px;
+            font-size: 13px;
         }
         
         .control-group .value-display {
@@ -152,13 +163,13 @@
         <h2>Управление</h2>
         
         <div class="control-group">
-            <label>Дата: <span id="day-value">326</span></label>
-            <input type="range" id="day-slider" min="1" max="365" value="326" step="0.1">
+            <label>Выбор даты:</label>
+            <input type="date" id="date-picker" value="2025-11-22">
         </div>
         
         <div class="control-group">
-            <label>Время: <span id="hour-value">21:00</span></label>
-            <input type="range" id="hour-slider" min="0" max="24" value="21" step="0.1">
+            <label>Время (MSK):</label>
+            <input type="time" id="time-picker" value="21:00">
         </div>
         
         <div class="control-group">
@@ -190,31 +201,42 @@
         // Основной код Three.js
         let scene, camera, renderer, controls;
         let earth, atmosphere, dome, sun, moon, shadowPlane;
-        let coordinateSystem; // Группа для координатной системы
+        let coordinateSystem;
         let animationId;
         let isAnimating = false;
         let animationSpeed = 1;
         
         // Текущие значения
-        let currentDay = 326;      // 22 ноября 2025
-        let currentHour = 21;      // 21:00 MSK
-        let currentMoonDay = 15;   // Середина лунного цикла
+        let currentDate = new Date(2025, 10, 22); // 22 ноября 2025
+        let currentTime = 21.0; // 21:00 MSK
+        let currentMoonDay = 15;
         
-        // КРИТИЧНЫЕ КОНСТАНТЫ - РАЗМЕРЫ МОДЕЛИ ПЛОСКОЙ ЗЕМЛИ
-        const EARTH_RADIUS = 20000;     // Радиус плоской Земли (20000 км в масштабе)
-        const DOME_RADIUS = 20000;      // Радиус купола совпадает с радиусом Земли
-        const DOME_HEIGHT = 8000;       // Высота купола над плоскостью (8000 км)
-        const SUN_HEIGHT = 4500;        // Высота Солнца над плоскостью (4500 км)
-        const MOON_HEIGHT = 4200;       // Высота Луны над плоскостью (4200 км)
+        // КРИТИЧНЫЕ КОНСТАНТЫ
+        const EARTH_RADIUS = 20000;
+        const DOME_RADIUS = 20000;
+        const DOME_HEIGHT = 8000;
+        const SUN_HEIGHT = 4500;
+        const MOON_HEIGHT = 4200;
         const ATMOSPHERE_THICKNESS = 1000;
         
-        // Преобразование дня года в календарную дату
-        function dayOfYearToDate(dayOfYear, year = 2025) {
-            const date = new Date(year, 0);
-            date.setDate(dayOfYear);
+        // ИСПРАВЛЕНИЕ: Смещение для выравнивания нулевого меридиана с Гринвичем
+        // На азимутальной карте Гринвич направлен вниз (на юг)
+        // В системе координат Three.js это ось -Z
+        const GREENWICH_OFFSET = -Math.PI / 2; // -90° (поворот против часовой стрелки)
+        
+        // Преобразование даты в день года
+        function dateToDayOfYear(date) {
+            const start = new Date(date.getFullYear(), 0, 0);
+            const diff = date - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
+        }
+        
+        // Форматирование даты
+        function formatDate(date) {
             const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 
                            'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-            return `${date.getDate()} ${months[date.getMonth()]}`;
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
         }
         
         // Расчет солнечной деклинации
@@ -229,11 +251,26 @@
             return EARTH_RADIUS * normalizedLat * 0.5;
         }
         
-        // Расчет позиции Солнца
-        function calculateSunPosition(dayOfYear, hourOfDay) {
+        // ИСПРАВЛЕННЫЙ расчет позиции Солнца
+        function calculateSunPosition(date, timeDecimal) {
+            const dayOfYear = dateToDayOfYear(date);
             const declination = calculateSolarDeclination(dayOfYear);
             const radius = latitudeToRadius(declination);
-            const angle = (hourOfDay / 24) * Math.PI * 2;
+            
+            // КРИТИЧНО: Правильное вычисление долготы Солнца
+            // В полдень по Гринвичу (12:00 UTC) Солнце должно быть на нулевом меридиане
+            // MSK = UTC+3, поэтому 15:00 MSK = 12:00 UTC (полдень в Гринвиче)
+            
+            // Переводим MSK в UTC
+            const utcTime = timeDecimal - 3.0;
+            
+            // Полдень = 12:00 UTC, это 0° долготы (нулевой меридиан)
+            // 24 часа = 360°, 1 час = 15°
+            // Солнце движется на запад: утром на востоке (+), вечером на западе (-)
+            const hourAngle = ((12.0 - utcTime) / 24.0) * Math.PI * 2;
+            
+            // Применяем смещение Гринвича
+            const angle = hourAngle + GREENWICH_OFFSET;
             
             const x = radius * Math.cos(angle);
             const z = radius * Math.sin(angle);
@@ -243,10 +280,10 @@
         }
         
         // Расчет позиции Луны
-        function calculateMoonPosition(moonDay, hourOfDay) {
+        function calculateMoonPosition(moonDay, timeDecimal) {
             const moonDeclination = Math.sin((moonDay / 29.5) * Math.PI * 2) * 28.5;
             const radius = latitudeToRadius(moonDeclination);
-            const moonAngle = (moonDay / 27.3) * Math.PI * 2;
+            const moonAngle = (moonDay / 27.3) * Math.PI * 2 + GREENWICH_OFFSET;
             
             const x = radius * Math.cos(moonAngle);
             const z = radius * Math.sin(moonAngle);
@@ -283,7 +320,7 @@
             scene.add(ambientLight);
             
             createEarth();
-            createCoordinateSystem(); // Новая географическая система координат
+            createCoordinateSystem();
             createDome();
             createAtmosphere();
             createSun();
@@ -297,7 +334,7 @@
             updateInfoPanel();
         }
         
-        // Создание плоской Земли с текстурой
+        // Создание плоской Земли
         function createEarth() {
             const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 256);
             
@@ -319,7 +356,8 @@
                 function(texture) {
                     console.log('✓ Карта успешно загружена');
                     texture.center.set(0.5, 0.5);
-                    texture.rotation = -Math.PI / 2;
+                    // ИСПРАВЛЕНИЕ: Поворот текстуры для совмещения с нулевым меридианом
+                    texture.rotation = GREENWICH_OFFSET;
                     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
                     texture.minFilter = THREE.LinearFilter;
                     texture.magFilter = THREE.LinearFilter;
@@ -349,7 +387,6 @@
         
         // Добавление тропиков
         function addTropics() {
-            // Тропик Рака (23.5° с.ш.)
             const cancerRadius = latitudeToRadius(23.5);
             const cancerGeometry = new THREE.RingGeometry(cancerRadius - 30, cancerRadius + 30, 256);
             const cancerMaterial = new THREE.MeshBasicMaterial({ 
@@ -363,7 +400,6 @@
             cancerRing.position.y = 5;
             scene.add(cancerRing);
             
-            // Тропик Козерога (23.5° ю.ш.)
             const capricornRadius = latitudeToRadius(-23.5);
             const capricornGeometry = new THREE.RingGeometry(capricornRadius - 30, capricornRadius + 30, 256);
             const capricornMaterial = new THREE.MeshBasicMaterial({ 
@@ -378,11 +414,10 @@
             scene.add(capricornRing);
         }
         
-        // НОВАЯ ФУНКЦИЯ: Создание географической координатной системы
+        // Создание координатной системы
         function createCoordinateSystem() {
             coordinateSystem = new THREE.Group();
             
-            // Материалы для линий
             const meridianMaterial = new THREE.LineBasicMaterial({ 
                 color: 0x888888, 
                 transparent: true, 
@@ -400,12 +435,12 @@
                 opacity: 0.25 
             });
             
-            // МЕРИДИАНЫ (линии долготы) - 24 меридиана через каждые 15°
+            // МЕРИДИАНЫ (24 линии через каждые 15°)
             for (let lon = 0; lon < 360; lon += 15) {
                 const points = [];
-                const angleRad = (lon * Math.PI) / 180;
+                // ИСПРАВЛЕНИЕ: Применяем смещение Гринвича ко всем меридианам
+                const angleRad = ((lon * Math.PI) / 180) + GREENWICH_OFFSET;
                 
-                // От центра (Северный полюс) до края
                 for (let r = 0; r <= EARTH_RADIUS; r += 500) {
                     const x = r * Math.cos(angleRad);
                     const z = r * Math.sin(angleRad);
@@ -419,29 +454,24 @@
                 );
                 coordinateSystem.add(line);
                 
-                // Подписи меридианов на внешнем краю
-                if (lon % 30 === 0) { // Каждые 30° (0, 30, 60, ...)
+                // Подписи меридианов
+                if (lon % 30 === 0) {
                     createTextLabel(`${lon}°`, EARTH_RADIUS + 300, angleRad, coordinateSystem);
                 }
             }
             
-            // ПАРАЛЛЕЛИ (линии широты) - концентрические круги
+            // ПАРАЛЛЕЛИ (линии широты)
             const latitudes = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0, -10, -20, -30, -40, -50, -60, -70, -80];
             
             latitudes.forEach(lat => {
                 const radius = latitudeToRadius(lat);
                 if (radius > 0 && radius < EARTH_RADIUS) {
-                    const geometry = new THREE.RingGeometry(
-                        radius - 5, 
-                        radius + 5, 
-                        128
-                    );
+                    const geometry = new THREE.RingGeometry(radius - 5, radius + 5, 128);
                     const ring = new THREE.Mesh(geometry, parallelMaterial);
                     ring.rotation.x = -Math.PI / 2;
                     ring.position.y = 10;
                     coordinateSystem.add(ring);
                     
-                    // Подписи широт (каждые 10°)
                     if (lat % 10 === 0 && lat !== 90) {
                         createLatitudeLabel(`${lat}°`, radius, coordinateSystem);
                     }
@@ -451,7 +481,7 @@
             scene.add(coordinateSystem);
         }
         
-        // Создание текстовых меток для меридианов (долготы)
+        // Создание текстовых меток
         function createTextLabel(text, radius, angle, parent) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
@@ -480,7 +510,6 @@
             parent.add(sprite);
         }
         
-        // Создание текстовых меток для параллелей (широты)
         function createLatitudeLabel(text, radius, parent) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
@@ -501,8 +530,11 @@
             });
             const sprite = new THREE.Sprite(spriteMaterial);
             
-            // Размещаем на нулевом меридиане (ось X+)
-            sprite.position.set(radius, 10, 0);
+            // ИСПРАВЛЕНИЕ: Размещаем метки широты на нулевом меридиане
+            const angle = GREENWICH_OFFSET;
+            const x = radius * Math.cos(angle);
+            const z = radius * Math.sin(angle);
+            sprite.position.set(x, 10, z);
             sprite.scale.set(350, 175, 1);
             
             parent.add(sprite);
@@ -589,28 +621,29 @@
         
         // Обновление позиций небесных тел
         function updateCelestialBodies() {
-            const sunPos = calculateSunPosition(currentDay, currentHour);
+            const sunPos = calculateSunPosition(currentDate, currentTime);
             sun.position.set(sunPos.x, sunPos.y, sunPos.z);
             
-            const moonPos = calculateMoonPosition(currentMoonDay, currentHour);
+            const moonPos = calculateMoonPosition(currentMoonDay, currentTime);
             moon.position.set(moonPos.x, moonPos.y, moonPos.z);
         }
         
         // Обновление информационной панели
         function updateInfoPanel() {
-            const sunPos = calculateSunPosition(currentDay, currentHour);
-            const moonPos = calculateMoonPosition(currentMoonDay, currentHour);
+            const sunPos = calculateSunPosition(currentDate, currentTime);
+            const moonPos = calculateMoonPosition(currentMoonDay, currentTime);
             
             const dx = sunPos.x - moonPos.x;
             const dy = sunPos.y - moonPos.y;
             const dz = sunPos.z - moonPos.z;
             const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
             
-            const hours = Math.floor(currentHour);
-            const minutes = Math.floor((currentHour % 1) * 60);
+            const hours = Math.floor(currentTime);
+            const minutes = Math.floor((currentTime % 1) * 60);
+            const dayOfYear = dateToDayOfYear(currentDate);
             
             document.getElementById('info-content').innerHTML = `
-                <strong>Дата:</strong> ${dayOfYearToDate(Math.floor(currentDay))} 2025 (день ${Math.floor(currentDay)})<br>
+                <strong>Дата:</strong> ${formatDate(currentDate)} (день ${dayOfYear})<br>
                 <strong>Время:</strong> ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} MSK<br>
                 <strong>Деклинация Солнца:</strong> ${sunPos.declination.toFixed(2)}°<br>
                 <strong>Радиус орбиты Солнца:</strong> ${(sunPos.radius).toFixed(0)} км<br>
@@ -624,25 +657,22 @@
         
         // Настройка контролов
         function setupControls() {
-            const daySlider = document.getElementById('day-slider');
-            const hourSlider = document.getElementById('hour-slider');
+            const datePicker = document.getElementById('date-picker');
+            const timePicker = document.getElementById('time-picker');
             const moonSlider = document.getElementById('moon-slider');
             const speedSlider = document.getElementById('speed-slider');
             
-            daySlider.addEventListener('input', (e) => {
-                currentDay = parseFloat(e.target.value);
-                const displayText = `${dayOfYearToDate(Math.floor(currentDay))} (${Math.floor(currentDay)})`;
-                document.getElementById('day-value').textContent = displayText;
+            // Обработчик выбора даты
+            datePicker.addEventListener('change', (e) => {
+                currentDate = new Date(e.target.value + 'T00:00:00');
                 updateCelestialBodies();
                 updateInfoPanel();
             });
             
-            hourSlider.addEventListener('input', (e) => {
-                currentHour = parseFloat(e.target.value);
-                const hours = Math.floor(currentHour);
-                const minutes = Math.floor((currentHour % 1) * 60);
-                document.getElementById('hour-value').textContent = 
-                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            // Обработчик выбора времени
+            timePicker.addEventListener('change', (e) => {
+                const [hours, minutes] = e.target.value.split(':').map(Number);
+                currentTime = hours + minutes / 60;
                 updateCelestialBodies();
                 updateInfoPanel();
             });
@@ -680,7 +710,6 @@
                 atmosphere.visible = e.target.checked;
             });
             
-            // НОВЫЙ ЧЕКБОКС: Управление видимостью координатной сети
             document.getElementById('show-grid').addEventListener('change', (e) => {
                 coordinateSystem.visible = e.target.checked;
             });
@@ -719,22 +748,23 @@
             requestAnimationFrame(animate);
             
             if (isAnimating) {
-                currentHour += 0.02 * animationSpeed;
-                currentDay += 0.002 * animationSpeed;
+                // Обновление времени
+                currentTime += 0.02 * animationSpeed;
                 currentMoonDay += 0.002 * animationSpeed;
                 
-                if (currentHour >= 24) currentHour = 0;
-                if (currentDay > 365) currentDay = 1;
+                // Переход на следующий день
+                if (currentTime >= 24) {
+                    currentTime = 0;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    document.getElementById('date-picker').value = currentDate.toISOString().split('T')[0];
+                }
+                
                 if (currentMoonDay >= 29.5) currentMoonDay = 0;
                 
-                document.getElementById('day-slider').value = currentDay;
-                const displayText = `${dayOfYearToDate(Math.floor(currentDay))} (${Math.floor(currentDay)})`;
-                document.getElementById('day-value').textContent = displayText;
-                
-                const hours = Math.floor(currentHour);
-                const minutes = Math.floor((currentHour % 1) * 60);
-                document.getElementById('hour-slider').value = currentHour;
-                document.getElementById('hour-value').textContent = 
+                // Обновление UI
+                const hours = Math.floor(currentTime);
+                const minutes = Math.floor((currentTime % 1) * 60);
+                document.getElementById('time-picker').value = 
                     `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
                 
                 document.getElementById('moon-slider').value = currentMoonDay;
