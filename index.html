@@ -318,17 +318,36 @@
         
         // Создание плоской Земли
         function createEarth() {
-            const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 128);
-            const material = new THREE.MeshStandardMaterial({
-                color: 0x2d5a3a,
-                roughness: 0.8,
-                metalness: 0.2,
-                side: THREE.DoubleSide
-            });
-            earth = new THREE.Mesh(geometry, material);
-            earth.rotation.x = -Math.PI / 2;
-            earth.receiveShadow = true;
-            scene.add(earth);
+  const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 128);
+  
+  const textureLoader = new THREE.TextureLoader();
+  const earthTexture = textureLoader.load(
+    'https://photos.app.goo.gl/3AMcp49J3rckuc6X7',  // ваш файл
+    function(texture) {
+      // Callback при успешной загрузке
+      console.log('Текстура загружена успешно');
+    },
+    undefined,
+    function(error) {
+      console.error('Ошибка загрузки текстуры:', error);
+    }
+  );
+  
+  // Настройки текстуры
+  earthTexture.anisotropy = 16;
+  
+  const material = new THREE.MeshStandardMaterial({
+    map: earthTexture,
+    roughness: 0.7,
+    metalness: 0.2,
+    side: THREE.DoubleSide
+  });
+  
+  earth = new THREE.Mesh(geometry, material);
+  earth.rotation.x = -Math.PI / 2;
+  earth.receiveShadow = true;
+  scene.add(earth);
+
 
             // Добавление тропиков Рака и Козерога
                 // Тропик Рака (23.5° с.ш.)
