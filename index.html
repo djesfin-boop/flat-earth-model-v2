@@ -219,10 +219,10 @@
         const MOON_HEIGHT = 4200;
         const ATMOSPHERE_THICKNESS = 1000;
         
-        // ИСПРАВЛЕНИЕ: Смещение для выравнивания нулевого меридиана с Гринвичем
-        // На азимутальной карте Гринвич направлен вниз (на юг)
-        // В системе координат Three.js это ось -Z
-        const GREENWICH_OFFSET = -Math.PI / 2; // -90° (поворот против часовой стрелки)
+        // ИСПРАВЛЕНИЕ: На стандартной азимутальной карте нулевой меридиан направлен вниз
+        // В координатах Three.js это ось -Z (180°)
+        // Чтобы выровнять карту и координатную сеть с Гринвичем, нужно повернуть всё на 180°
+        const GREENWICH_OFFSET = Math.PI; // 180° поворот
         
         // Преобразование даты в день года
         function dateToDayOfYear(date) {
@@ -251,25 +251,20 @@
             return EARTH_RADIUS * normalizedLat * 0.5;
         }
         
-        // ИСПРАВЛЕННЫЙ расчет позиции Солнца
+        // Расчет позиции Солнца
         function calculateSunPosition(date, timeDecimal) {
             const dayOfYear = dateToDayOfYear(date);
             const declination = calculateSolarDeclination(dayOfYear);
             const radius = latitudeToRadius(declination);
             
-            // КРИТИЧНО: Правильное вычисление долготы Солнца
-            // В полдень по Гринвичу (12:00 UTC) Солнце должно быть на нулевом меридиане
-            // MSK = UTC+3, поэтому 15:00 MSK = 12:00 UTC (полдень в Гринвиче)
-            
-            // Переводим MSK в UTC
+            // Переводим MSK в UTC (MSK = UTC+3)
             const utcTime = timeDecimal - 3.0;
             
-            // Полдень = 12:00 UTC, это 0° долготы (нулевой меридиан)
-            // 24 часа = 360°, 1 час = 15°
-            // Солнце движется на запад: утром на востоке (+), вечером на западе (-)
+            // В полдень по UTC (12:00) Солнце на нулевом меридиане (Гринвич)
+            // Солнце движется на запад: 24 часа = 360°, 1 час = 15°
             const hourAngle = ((12.0 - utcTime) / 24.0) * Math.PI * 2;
             
-            // Применяем смещение Гринвича
+            // Применяем смещение для выравнивания с картой
             const angle = hourAngle + GREENWICH_OFFSET;
             
             const x = radius * Math.cos(angle);
@@ -356,7 +351,7 @@
                 function(texture) {
                     console.log('✓ Карта успешно загружена');
                     texture.center.set(0.5, 0.5);
-                    // ИСПРАВЛЕНИЕ: Поворот текстуры для совмещения с нулевым меридианом
+                    // ИСПРАВЛЕНИЕ: Поворот текстуры на 180° для совмещения Гринвича с нулевым меридианом
                     texture.rotation = GREENWICH_OFFSET;
                     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
                     texture.minFilter = THREE.LinearFilter;
@@ -438,7 +433,7 @@
             // МЕРИДИАНЫ (24 линии через каждые 15°)
             for (let lon = 0; lon < 360; lon += 15) {
                 const points = [];
-                // ИСПРАВЛЕНИЕ: Применяем смещение Гринвича ко всем меридианам
+                // Применяем смещение Гринвича ко всем меридианам
                 const angleRad = ((lon * Math.PI) / 180) + GREENWICH_OFFSET;
                 
                 for (let r = 0; r <= EARTH_RADIUS; r += 500) {
@@ -530,7 +525,7 @@
             });
             const sprite = new THREE.Sprite(spriteMaterial);
             
-            // ИСПРАВЛЕНИЕ: Размещаем метки широты на нулевом меридиане
+            // Размещаем метки широты на нулевом меридиане
             const angle = GREENWICH_OFFSET;
             const x = radius * Math.cos(angle);
             const z = radius * Math.sin(angle);
@@ -662,14 +657,12 @@
             const moonSlider = document.getElementById('moon-slider');
             const speedSlider = document.getElementById('speed-slider');
             
-            // Обработчик выбора даты
             datePicker.addEventListener('change', (e) => {
                 currentDate = new Date(e.target.value + 'T00:00:00');
                 updateCelestialBodies();
                 updateInfoPanel();
             });
             
-            // Обработчик выбора времени
             timePicker.addEventListener('change', (e) => {
                 const [hours, minutes] = e.target.value.split(':').map(Number);
                 currentTime = hours + minutes / 60;
@@ -689,7 +682,6 @@
                 document.getElementById('speed-value').textContent = animationSpeed.toFixed(1) + 'x';
             });
             
-            // Чекбоксы видимости
             document.getElementById('show-earth').addEventListener('change', (e) => {
                 earth.visible = e.target.checked;
             });
@@ -714,7 +706,6 @@
                 coordinateSystem.visible = e.target.checked;
             });
             
-            // Кнопка сброса камеры
             document.getElementById('reset-camera').addEventListener('click', () => {
                 camera.position.set(0, 35000, 35000);
                 camera.lookAt(0, 0, 0);
@@ -722,7 +713,6 @@
                 controls.update();
             });
             
-            // Кнопка анимации
             const toggleBtn = document.getElementById('toggle-animation');
             toggleBtn.addEventListener('click', () => {
                 isAnimating = !isAnimating;
@@ -730,7 +720,6 @@
             });
         }
         
-        // Скрытие экрана загрузки
         function hideLoadingScreen() {
             const loadingScreen = document.getElementById('loading-status');
             const infoPanel = document.getElementById('info-panel');
@@ -743,16 +732,13 @@
             controlsPanel.style.display = 'block';
         }
         
-        // Цикл анимации
         function animate() {
             requestAnimationFrame(animate);
             
             if (isAnimating) {
-                // Обновление времени
                 currentTime += 0.02 * animationSpeed;
                 currentMoonDay += 0.002 * animationSpeed;
                 
-                // Переход на следующий день
                 if (currentTime >= 24) {
                     currentTime = 0;
                     currentDate.setDate(currentDate.getDate() + 1);
@@ -761,7 +747,6 @@
                 
                 if (currentMoonDay >= 29.5) currentMoonDay = 0;
                 
-                // Обновление UI
                 const hours = Math.floor(currentTime);
                 const minutes = Math.floor((currentTime % 1) * 60);
                 document.getElementById('time-picker').value = 
@@ -778,14 +763,12 @@
             renderer.render(scene, camera);
         }
         
-        // Обработка изменения размера окна
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
         
-        // Запуск приложения
         window.addEventListener('DOMContentLoaded', () => {
             init();
             animate();
