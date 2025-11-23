@@ -182,10 +182,9 @@
         let currentMoonDay = 15;
         
         // Константы для азимутальной проекции
-        const EARTH_RADIUS = 20000;      // Радиус плоской Земли
-        const DOME_RADIUS = 30000;       // Радиус купола
-        const DOME_HEIGHT = 25000;       // Высота купола
-        const ATMOSPHERE_THICKNESS = 3000; // Толщина атмосферы
+        const EARTH_RADIUS = 6371;      // Радиус плоской Земли (км)        const DOME_RADIUS = 10000;       // Радиус купола
+        const DOME_HEIGHT = 8000;       // Высота купола
+        const ATMOSPHERE_THICKNESS = 1000; // Толщина атмосферы
         const TROPIC_CANCER = 23.5;      // Тропик Рака (градусы)
         const TROPIC_CAPRICORN = -23.5;  // Тропик Козерога (градусы)
         
@@ -352,6 +351,7 @@
   
   const material = new THREE.MeshStandardMaterial({
     map: earthTexture,
+        color: 0xffffff,  // Белый цвет, чтобы не перекрывать текстуру
     roughness: 0.7,
     metalness: 0.1,
     side: THREE.DoubleSide
