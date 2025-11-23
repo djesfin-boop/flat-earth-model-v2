@@ -320,54 +320,85 @@
         function createEarth() {
   const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 128);
   
+  // Загрузка текстуры азимутальной карты
   const textureLoader = new THREE.TextureLoader();
   const earthTexture = textureLoader.load(
-    'https://photos.app.goo.gl/3AMcp49J3rckuc6X7',  // ваш файл
+    'azimuthal_map.jpg',  // Разместите файл карты в корне репозитория
     function(texture) {
-      // Callback при успешной загрузке
-      console.log('Текстура загружена успешно');
+      console.log('Карта загружена успешно');
     },
     undefined,
     function(error) {
-      console.error('Ошибка загрузки текстуры:', error);
+      console.error('Ошибка загрузки карты:', error);
     }
   );
   
-  // Настройки текстуры
-  earthTexture.anisotropy = 16;
+  // КРИТИЧНО: Настройка правильной ориентации
+  // Азимутальная проекция центрирована на Северном полюсе
+  // Нулевой меридиан (Гринвич) должен смотреть вниз (на юг в 3D пространстве)
+  
+  // Поворачиваем текстуру так, чтобы 0° долготы был внизу экрана
+  // В вашей модели час 0 (полночь) = 0 радиан, что соответствует положительной оси X
+  // Гринвич должен быть на 0° (ось X+), что соответствует ~6:00 утра при стандартном времени
+  
+  earthTexture.center.set(0.5, 0.5);
+  // Поворот на 90° по часовой стрелке, чтобы выровнять с системой координат модели
+  earthTexture.rotation = -Math.PI / 2;
+  
+  // Качество текстуры
+  earthTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  earthTexture.minFilter = THREE.LinearFilter;
+  earthTexture.magFilter = THREE.LinearFilter;
   
   const material = new THREE.MeshStandardMaterial({
     map: earthTexture,
     roughness: 0.7,
-    metalness: 0.2,
+    metalness: 0.1,
     side: THREE.DoubleSide
   });
   
   earth = new THREE.Mesh(geometry, material);
-  earth.rotation.x = -Math.PI / 2;
+  earth.rotation.x = -Math.PI / 2; // Плоскость горизонтальная
   earth.receiveShadow = true;
   scene.add(earth);
-
-
-            // Добавление тропиков Рака и Козерога
-                // Тропик Рака (23.5° с.ш.)
-                const tropicCancerRadius = latitudeToRadius(23.5);
-                const tropicCancerGeometry = new THREE.RingGeometry(tropicCancerRadius - 50, tropicCancerRadius + 50, 128);
-                const tropicCancerMaterial = new THREE.MeshBasicMaterial({ color: 0xff6b6b, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
-                const tropicCancer = new THREE.Mesh(tropicCancerGeometry, tropicCancerMaterial);
-                tropicCancer.rotation.x = -Math.PI / 2;
-                tropicCancer.position.y = 10;
-                scene.add(tropicCancer);
-
-                // Тропик Козерога (23.5° ю.ш.)
-    const tropicCapricornRadius = latitudeToRadius(-23.5);
-    const tropicCapricornGeometry = new THREE.RingGeometry(tropicCapricornRadius - 50, tropicCapricornRadius + 50, 128);
-    const tropicCapricornMaterial = new THREE.MeshBasicMaterial({ color: 0x6bb6ff, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
-    const tropicCapricorn = new THREE.Mesh(tropicCapricornGeometry, tropicCapricornMaterial);
-    tropicCapricorn.rotation.x = -Math.PI / 2;
-    tropicCapricorn.position.y = 10;
-    scene.add(tropicCapricorn);
-        }
+  
+  // Тропики Рака и Козерога (можно закомментировать, если мешают)
+  // Тропик Рака (23.5° с.ш.)
+  const tropicCancerRadius = latitudeToRadius(23.5);
+  const tropicCancerGeometry = new THREE.RingGeometry(
+    tropicCancerRadius - 50, 
+    tropicCancerRadius + 50, 
+    128
+  );
+  const tropicCancerMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0xff6b6b, 
+    side: THREE.DoubleSide, 
+    transparent: true, 
+    opacity: 0.3  // Сделал более прозрачным
+  });
+  const tropicCancer = new THREE.Mesh(tropicCancerGeometry, tropicCancerMaterial);
+  tropicCancer.rotation.x = -Math.PI / 2;
+  tropicCancer.position.y = 10;
+  scene.add(tropicCancer);
+  
+  // Тропик Козерога (23.5° ю.ш.)
+  const tropicCapricornRadius = latitudeToRadius(-23.5);
+  const tropicCapricornGeometry = new THREE.RingGeometry(
+    tropicCapricornRadius - 50, 
+    tropicCapricornRadius + 50, 
+    128
+  );
+  const tropicCapricornMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0x6bb6ff, 
+    side: THREE.DoubleSide, 
+    transparent: true, 
+    opacity: 0.3  // Сделал более прозрачным
+  });
+  const tropicCapricorn = new THREE.Mesh(tropicCapricornGeometry, tropicCapricornMaterial);
+  tropicCapricorn.rotation.x = -Math.PI / 2;
+  tropicCapricorn.position.y = 10;
+  scene.add(tropicCapricorn);
+}
         
         // Создание купола
         function createDome() {
