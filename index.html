@@ -174,7 +174,7 @@
         
         <div class="control-group">
             <label>Скорость: <span id="speed-value">1.0x</span></label>
-            <input type="range" id="speed-slider" min="0.1" max="5" value="1" step="0.1">
+            <input type="range" id="speed-slider" min="0.1" max="10" value="1" step="0.1">
         </div>
         
         <div class="checkbox-group">
@@ -193,7 +193,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
-        // Основной код Three.js
         let scene, camera, renderer, controls;
         let earth, atmosphere, dome, sun, moon, shadowPlane;
         let coordinateSystem;
@@ -201,32 +200,21 @@
         let isAnimating = false;
         let animationSpeed = 1;
         
-        // Текущие значения
-        let currentDate = new Date(2025, 10, 22, 21, 0, 0); // 22 ноября 2025, 21:00
+        let currentDate = new Date(2025, 10, 22, 21, 0, 0);
         
-        // КРИТИЧНЫЕ КОНСТАНТЫ
         const EARTH_RADIUS = 20000;
         const DOME_RADIUS = 20000;
         const DOME_HEIGHT = 8000;
         const SUN_HEIGHT = 4500;
         const MOON_HEIGHT = 4200;
         const ATMOSPHERE_THICKNESS = 1000;
+        const GREENWICH_OFFSET = Math.PI;
         
-        // Смещение для выравнивания нулевого меридиана с Гринвичем на карте
-        const GREENWICH_OFFSET = Math.PI; // 180°
-        
-        // ТОЧНАЯ АСТРОНОМИЧЕСКАЯ ПРИВЯЗКА
-        // Эталонная точка J2000.0: 1 января 2000 года, 12:00 UTC
         const J2000_EPOCH = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
-        
-        // Эталонное новолуние: 6 января 2000, 18:14 UTC
         const REFERENCE_NEW_MOON = new Date(Date.UTC(2000, 0, 6, 18, 14, 0));
+        const SYNODIC_MONTH = 29.530588861;
+        const SIDEREAL_MONTH = 27.321661;
         
-        // Лунные константы
-        const SYNODIC_MONTH = 29.530588861; // Синодический месяц (новолуние до новолуния) в днях
-        const SIDEREAL_MONTH = 27.321661; // Сидерический месяц (полный оборот) в днях
-        
-        // Преобразование даты в день года
         function dateToDayOfYear(date) {
             const start = new Date(date.getFullYear(), 0, 0);
             const diff = date - start;
@@ -234,14 +222,12 @@
             return Math.floor(diff / oneDay);
         }
         
-        // Форматирование даты
         function formatDate(date) {
             const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 
                            'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
             return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
         }
         
-        // Расчет фазы Луны (0-29.53 дней)
         function calculateMoonAge(date) {
             const timeDiff = date - REFERENCE_NEW_MOON;
             const daysSinceNewMoon = timeDiff / (1000 * 60 * 60 * 24);
@@ -249,7 +235,6 @@
             return age < 0 ? age + SYNODIC_MONTH : age;
         }
         
-        // Названия фаз Луны
         function getMoonPhaseName(age) {
             if (age < 1.84566) return 'Новолуние';
             if (age < 7.38264) return 'Растущий серп';
@@ -262,7 +247,6 @@
             return 'Новолуние';
         }
         
-        // ТОЧНЫЙ расчет солнечной деклинации
         function calculateSolarDeclination(date) {
             const daysSinceJ2000 = (date - J2000_EPOCH) / (1000 * 60 * 60 * 24);
             const meanAnomaly = (357.529 + 0.98560028 * daysSinceJ2000) * (Math.PI / 180);
@@ -274,36 +258,22 @@
             return declination * (180 / Math.PI);
         }
         
-        // ТОЧНЫЙ расчёт лунной деклинации
         function calculateMoonDeclination(date) {
             const daysSinceJ2000 = (date - J2000_EPOCH) / (1000 * 60 * 60 * 24);
-            
-            // Средняя долгота Луны
             const meanLongitude = (218.316 + 13.176396 * daysSinceJ2000) * (Math.PI / 180);
-            
-            // Средняя аномалия Луны
             const meanAnomaly = (134.963 + 13.064993 * daysSinceJ2000) * (Math.PI / 180);
-            
-            // Средняя элонгация (угловое расстояние от Солнца)
             const meanElongation = (297.850 + 12.190749 * daysSinceJ2000) * (Math.PI / 180);
-            
-            // Аргумент широты
             const argumentOfLatitude = (93.272 + 13.229350 * daysSinceJ2000) * (Math.PI / 180);
             
-            // Эклиптическая долгота Луны (упрощённая формула)
             const longitude = meanLongitude + 
                              (6.289 * Math.sin(meanAnomaly)) * (Math.PI / 180) +
                              (1.274 * Math.sin(2 * meanElongation - meanAnomaly)) * (Math.PI / 180) +
                              (0.658 * Math.sin(2 * meanElongation)) * (Math.PI / 180);
             
-            // Эклиптическая широта Луны
             const latitude = (5.128 * Math.sin(argumentOfLatitude)) * (Math.PI / 180) +
                             (0.280 * Math.sin(meanAnomaly + argumentOfLatitude)) * (Math.PI / 180);
             
-            // Наклон эклиптики
             const obliquity = 23.439 * (Math.PI / 180);
-            
-            // Деклинация Луны
             const declination = Math.asin(
                 Math.sin(latitude) * Math.cos(obliquity) +
                 Math.cos(latitude) * Math.sin(obliquity) * Math.sin(longitude)
@@ -312,7 +282,6 @@
             return declination * (180 / Math.PI);
         }
         
-        // ТОЧНЫЙ расчет уравнения времени
         function calculateEquationOfTime(date) {
             const daysSinceJ2000 = (date - J2000_EPOCH) / (1000 * 60 * 60 * 24);
             const meanAnomaly = (357.529 + 0.98560028 * daysSinceJ2000) * (Math.PI / 180);
@@ -326,13 +295,12 @@
             return eot;
         }
         
-        // Конвертация широты в радиус
         function latitudeToRadius(latitude) {
             const normalizedLat = (90 - latitude) / 90;
             return EARTH_RADIUS * normalizedLat * 0.5;
         }
         
-        // ТОЧНЫЙ расчет позиции Солнца
+        // СОЛНЦЕ: движется с востока на запад, делает полный оборот за 24 часа
         function calculateSunPosition(date) {
             const declination = calculateSolarDeclination(date);
             const radius = latitudeToRadius(declination);
@@ -344,6 +312,8 @@
             
             const eot = calculateEquationOfTime(date);
             const trueSolarTime = utcTime + (eot / 60);
+            
+            // Солнце делает полный оборот (360°) за 24 часа
             const hourAngle = ((trueSolarTime - 12.0) / 24.0) * Math.PI * 2;
             const angle = hourAngle + GREENWICH_OFFSET;
             
@@ -354,27 +324,22 @@
             return { x, y, z, declination, radius };
         }
         
-        // ТОЧНЫЙ расчет позиции Луны с привязкой к дате
+        // ЛУНА: движется МЕДЛЕННО, делает полный оборот за ~27.3 дня
+        // НЕ участвует в суточном вращении!
         function calculateMoonPosition(date) {
-            // Деклинация Луны
             const declination = calculateMoonDeclination(date);
             const radius = latitudeToRadius(declination);
             
             // Количество дней с эталонного новолуния
             const daysSinceNewMoon = (date - REFERENCE_NEW_MOON) / (1000 * 60 * 60 * 24);
             
-            // Угол положения Луны на основе сидерического периода
-            // Луна делает полный оборот за 27.32 дня
+            // ИСПРАВЛЕНИЕ: Луна делает полный оборот за 27.32 дня (сидерический месяц)
+            // Она НЕ вращается вместе с Солнцем каждые 24 часа!
+            // За 24 часа Луна проходит только ~13.2° (360° / 27.3 дня)
             const orbitalAngle = (daysSinceNewMoon / SIDEREAL_MONTH) * Math.PI * 2;
             
-            // Добавляем суточное вращение (как для Солнца)
-            const utcHours = date.getUTCHours();
-            const utcMinutes = date.getUTCMinutes();
-            const utcTime = utcHours + utcMinutes / 60;
-            const dailyAngle = ((utcTime - 12.0) / 24.0) * Math.PI * 2;
-            
-            // Общий угол = орбитальное положение + суточное вращение + смещение Гринвича
-            const angle = orbitalAngle + dailyAngle + GREENWICH_OFFSET;
+            // Применяем только орбитальный угол + смещение Гринвича
+            const angle = orbitalAngle + GREENWICH_OFFSET;
             
             const x = radius * Math.cos(angle);
             const z = radius * Math.sin(angle);
@@ -383,7 +348,6 @@
             return { x, y, z, declination, radius };
         }
         
-        // Инициализация сцены
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x000814);
@@ -425,7 +389,6 @@
             updateInfoPanel();
         }
         
-        // Создание плоской Земли
         function createEarth() {
             const geometry = new THREE.CircleGeometry(EARTH_RADIUS, 256);
             
@@ -475,7 +438,6 @@
             addTropics();
         }
         
-        // Добавление тропиков
         function addTropics() {
             const cancerRadius = latitudeToRadius(23.5);
             const cancerGeometry = new THREE.RingGeometry(cancerRadius - 30, cancerRadius + 30, 256);
@@ -504,7 +466,6 @@
             scene.add(capricornRing);
         }
         
-        // Создание координатной системы
         function createCoordinateSystem() {
             coordinateSystem = new THREE.Group();
             
